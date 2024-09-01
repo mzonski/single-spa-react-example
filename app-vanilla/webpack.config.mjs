@@ -5,26 +5,46 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+/**
+ * @param {...string} extensions - The file extensions to format
+ */
+export function formatExtensionsToRegex(...extensions) {
+	const formattedExtensions = extensions.map((ext) => (ext.startsWith('.') ? ext.slice(1) : ext));
+	return `\\.(${formattedExtensions.join('|')})$`;
+}
+
+/**
+ * @param {...string} extensions - The file extensions to format
+ */
+export function createScriptLoaderRule(...extensions) {
+	const transpileOnly = extensions.some((ext) => ['js', 'jsx'].includes(ext.replace('.', '')));
+
+	return {
+		test: new RegExp(formatExtensionsToRegex(...extensions)),
+		exclude: /node_modules/,
+		use: {
+			loader: 'ts-loader',
+			options: {
+				transpileOnly,
+			},
+		},
+	};
+}
+
 const config = {
-	entry: './src/configureSpaContainer.mjs',
+	entry: './src/configureSpaContainer.ts',
 	experiments: {
 		outputModule: true,
 	},
 	output: {
-		filename: 'configureSpaContainer.mjs',
-		path: path.resolve(__dirname, '../../', 'remote_modules', 'app'),
+		filename: 'spaContainer.js',
+		path: path.resolve(__dirname, '../', 'remote_modules', 'app'),
 		library: {
 			type: 'module',
 		},
 	},
 	module: {
-		rules: [
-			{
-				test: /\.mjs$/,
-				exclude: /node_modules/,
-				use: 'babel-loader',
-			},
-		],
+		rules: [createScriptLoaderRule('ts')],
 	},
 	plugins: [
 		new HtmlWebpackPlugin({
