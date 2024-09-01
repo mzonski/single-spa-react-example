@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"lib": ["ESNext"],
+		"module": "ESNext",
+		"moduleResolution": "Node",
+
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"jsx": "react-jsx",
+		"noEmit": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true
+	},
+	"include": ["**/*"],
+	"exclude": ["recipes", "__ignored", "node_modules", "remote_modules"]
+}

@@ -1,3 +1,4 @@
+// @ts-check
 import { rimraf } from 'rimraf';
 import { resolve } from 'path';
 import { pathToFileURL } from 'url';
@@ -44,13 +45,21 @@ export async function clearDirectory(dirPath) {
 		});
 
 		console.log(
-			`${chalk.yellow('Deleted')} ${chalk.bold.cyan(deletedFilesCount)} file(s) and ${chalk.bold.cyan(deletedDirsCount)} directorie(s) from ${chalk.cyan(dirPath)}`,
+			`${chalk.green('Deleted')} ${chalk.bold.cyan(deletedFilesCount)} file(s) and ${chalk.bold.cyan(deletedDirsCount)} directorie(s) from ${chalk.cyan(dirPath)}`,
 		);
 	} catch (e) {
-		if (e.code === 'ENOENT') {
-			console.error(`Directory ${chalk.cyan(dirPath)} does ${chalk.red('not exist')}`);
-		} else {
-			console.error(`Content of ${chalk.cyan(dirPath)} couldn't be deleted due to ${chalk.red('an error')}`, e);
+		switch (e.code) {
+			case 'ENOENT':
+				console.error(`Directory ${chalk.cyan(dirPath)} does ${chalk.red('not exist')}`);
+				break;
+			case 'EPERM':
+				console.error(
+					`${chalk.red('Access denied')}: An ${chalk.bold.yellow('open handle')} may be preventing deletion of ${chalk.cyan(e.path)}. Verify permissions and retry.`,
+				);
+				break;
+			default:
+				console.error(`Content of ${chalk.cyan(dirPath)} couldn't be deleted due to ${chalk.red('an error')}`, e);
+				break;
 		}
 	}
 }
@@ -65,7 +74,7 @@ if (import.meta.url === scriptFilePath) {
 		process.exit(1);
 	}
 
-	clearDirectory(fullPath);
+	await clearDirectory(fullPath);
 }
 
 export default clearDirectory;
