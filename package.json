@@ -1,0 +1,16 @@
+{
+	"name": "single-spa-react-example",
+	"version": "0.1.0",
+	"scripts": {
+		"remote:host": "serve remote_modules -p 3322 -C",
+		"remote:clear": "node _scripts/clearDirectory.mjs remote_modules",
+		"pretty": "prettier . --write"
+	},
+	"devDependencies": {
+		"prettier": "^3.3.3",
+		"rimraf": "^6.0.1",
+		"serve": "^14.2.3",
+		"chalk": "^5.3.0",
+		"zonia-config-prettier": "^1.1.0"
+	}
+}
