@@ -1,19 +1,21 @@
 {
 	"compilerOptions": {
+		"outDir": "../../remote_modules/legacy",
+		"sourceMap": true,
+		"noEmit": false,
+
 		"target": "ESNext",
-		"lib": ["ESNext"],
+		"lib": ["ESNext", "DOM"],
 		"module": "ESNext",
 		"moduleResolution": "Node",
-
+		"strict": false,
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
 		"checkJs": true,
 		"esModuleInterop": true,
-		"jsx": "react-jsx",
-		"noEmit": true,
 		"resolveJsonModule": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"jsx": "react-jsx"
 	},
-	"include": ["**/*"],
-	"exclude": ["recipes", "__ignored", "node_modules", "remote_modules"]
+	"include": ["src", "../node_modules/webpack/module.d.ts"]
 }

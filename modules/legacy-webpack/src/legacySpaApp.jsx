@@ -15,4 +15,4 @@ const lifecycles = singleSpaReact({
 	rootComponent: LegacyApp,
 });
 
-export const { bootstrap, mount, unmount } = lifecycles;
+export const { bootstrap, mount, unmount, update } = lifecycles;

@@ -2,11 +2,14 @@
 	"name": "single-spa-react-example",
 	"version": "0.1.0",
 	"scripts": {
+		"prod:host": "serve remote_modules/app -p 3321 -C",
 		"remote:host": "serve remote_modules -p 3322 -C",
 		"remote:clear": "node _scripts/clearDirectory.mjs remote_modules",
 		"pretty": "prettier . --write"
 	},
 	"devDependencies": {
+		"@types/react": "^18.3.5",
+		"@types/react-dom": "^18.3.0",
 		"prettier": "^3.3.3",
 		"rimraf": "^6.0.1",
 		"serve": "^14.2.3",
