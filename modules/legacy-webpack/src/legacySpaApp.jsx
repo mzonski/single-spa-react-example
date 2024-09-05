@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOMClient from 'react-dom/client';
 import singleSpaReact from 'single-spa-react';
 
 const LegacyApp = () => (
@@ -11,7 +11,7 @@ const LegacyApp = () => (
 
 const lifecycles = singleSpaReact({
 	React,
-	ReactDOM,
+	ReactDOMClient,
 	rootComponent: LegacyApp,
 });
 

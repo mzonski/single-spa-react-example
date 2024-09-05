@@ -8,30 +8,30 @@ type WebpackModuleLoader = (runtime: typeof __webpack_require__) => void;
 /**
  * Function that retrieves modules of chunk and stores it inside __webpack_exports__ to be retrieved by utilizing webpack api.
  */
-type WebpackChunkLoadingFunction = (
+export type WebpackChunkLoadingFunction = (
 	_unused_in_es_modules: object | undefined,
 	webpack_exports: Record<string | number, unknown>,
 	webpack_runtime: typeof __webpack_require__,
 ) => void;
 
-type ModulePath = Brand<string, 'ModulePath'>;
-type WebpackChunkId = Brand<string | number, 'ChunkId'>;
+export type ModulePath = Brand<string, 'ModulePath'>;
+export type WebpackChunkId = Brand<string | number, 'ChunkId'>;
 
 type WebpackModules = {
 	[K in ModulePath]: WebpackChunkLoadingFunction;
 };
 
-type WebpackRuntimeChunk = [WebpackChunkId[], WebpackModules];
-type WebpackRuntimeBundle = [WebpackChunkId[], WebpackModules, WebpackModuleLoader];
-type WebpackRuntimeScope = WebpackRuntimeChunk | WebpackRuntimeBundle;
+export type WebpackRuntimeChunk = [WebpackChunkId[], WebpackModules];
+export type WebpackRuntimeBundle = [WebpackChunkId[], WebpackModules, WebpackModuleLoader];
+export type WebpackRuntimeScope = WebpackRuntimeChunk | WebpackRuntimeBundle;
 
-type WebpackScopeName<T extends string = string> = string | `webpackChunk${T}`;
+export type WebpackScopeName<T extends string = string> = string | `webpackChunk${T}`;
 /**
  * Represents the global scope for shared modules in Webpack.<br>
  * Correlates with output.globalObject and contains all loaded scopes.<br>
  * The key is determined by output.chunkLoadingGlobal or 'webpackChunk' + output.uniqueName.
  */
-type WebpackGlobalObject = {
+export type WebpackGlobalObject = {
 	[K in WebpackScopeName]: WebpackRuntimeScope[];
 } & { push: (parentLoadingFunction: WebpackChunkLoadingFunction, scope: WebpackRuntimeScope) => void };
 
@@ -54,5 +54,8 @@ export interface WebpackModuleFederationRuntime {
 	 * @param initScope - Optional initialization scope
 	 * @returns A promise that resolves when the initialization is complete.
 	 */
-	init(shareScope: WebpackShareScope, initScope?: WebpackRuntimeScope): Promise<void>;
+	init(shareScope: WebpackShareScope, initScope?: WebpackRuntimeScope[]): Promise<void>;
 }
+
+// TODO: Define types
+export type WebpackRuntime = Record<string, (...args: any[]) => any>;

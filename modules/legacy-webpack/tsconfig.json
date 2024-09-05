@@ -17,5 +17,9 @@
 		"skipLibCheck": true,
 		"jsx": "react-jsx"
 	},
-	"include": ["src", "../node_modules/webpack/module.d.ts"]
+	"include": [
+		"src",
+		"../../node_modules/webpack/module.d.ts",
+		"../../node_modules/webpack-dev-server/types/lib/Server.js"
+	]
 }

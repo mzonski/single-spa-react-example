@@ -3,7 +3,6 @@
 		"outDir": "../remote_modules/app",
 		"sourceMap": true,
 		"noEmit": false,
-
 		"target": "ESNext",
 		"lib": ["ESNext", "DOM"],
 		"module": "ESNext",
@@ -16,5 +15,5 @@
 		"resolveJsonModule": true,
 		"skipLibCheck": true
 	},
-	"include": ["src", "../node_modules/webpack/module.d.ts"]
+	"include": ["src", "../node_modules/webpack/module.d.ts", "../node_modules/webpack-dev-server/types/lib/Server.js"]
 }

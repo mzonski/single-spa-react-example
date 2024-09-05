@@ -1,15 +1,36 @@
 import { assertIsError } from '../../../utils';
 import { ExecutorResult, ModuleFederationExecutorAdapter, ScriptContent } from '../types';
-import { WebpackModuleFederationRuntime } from '../../webpackTypes';
+import { WebpackModuleFederationRuntime, WebpackRuntime } from '../../webpackTypes';
+import {
+	withDefinedWebpackSourceUrl,
+	withModuleDefaultExport,
+	withModulePublicPathDefined,
+	withModuleRuntimeSetup,
+} from './utils';
+
+const setupRemoteRuntime = (moduleRuntime: WebpackRuntime) => {
+	console.log('Runtime public path', moduleRuntime['p']);
+};
 
 export class BlobImportExecutorAdapter implements ModuleFederationExecutorAdapter {
 	async execute<TFederatedModule extends WebpackModuleFederationRuntime>(
-		moduleSource: ScriptContent,
+		remoteScriptContent: ScriptContent,
+		publicPath?: string,
 	): Promise<ExecutorResult<TFederatedModule>> {
 		try {
-			const blob = new Blob([moduleSource + 'export default __webpack_exports__;'], {
-				type: 'application/ecmascript',
-			});
+			const blob = new Blob(
+				[
+					withModuleRuntimeSetup(setupRemoteRuntime),
+					withModulePublicPathDefined(publicPath),
+					remoteScriptContent,
+					withModuleDefaultExport(),
+					withDefinedWebpackSourceUrl(publicPath),
+				],
+				{
+					type: 'application/ecmascript',
+				},
+			);
+
 			const blobUrl = URL.createObjectURL(blob);
 			const loadedModule = await import(/* webpackIgnore: true */ blobUrl);
 

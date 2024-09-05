@@ -1,8 +1,9 @@
 import { assertIsError } from '../utils';
-import { ExecutorAdapterType, LoaderAdapterType, LoadedModuleRemoteInfo, isExecutorFailed } from './adapters/types';
+import { ExecutorAdapterType, isExecutorFailed, LoadedModuleRemoteInfo, LoaderAdapterType } from './adapters/types';
 import { createExecutor, createLoader } from './adapters/factories';
 import { WebpackModuleFederationRuntime } from './webpackTypes';
 import { withErrorHandling } from './utils/errorHandlingMixin';
+import { getRemoteModulePublicPath } from './utils/getRemoteModulePublicPath';
 
 interface IModuleFederationLoader {
 	loadRemoteModule(url: string, scopeName: string): Promise<void>;
@@ -14,7 +15,6 @@ export class ModuleFederationManager implements IModuleFederationLoader {
 	readonly #loaderAdapter: ReturnType<typeof createLoader<LoaderAdapterType>>;
 	readonly #executorAdapter: ReturnType<typeof createExecutor<ExecutorAdapterType>>;
 	readonly #loadedRemotes: Map<string, LoadedModuleRemoteInfo> = new Map();
-	#webpackShareScopeInitialized: boolean = false;
 
 	constructor(loaderType: LoaderAdapterType, executorType: ExecutorAdapterType) {
 		this.#loaderAdapter = createLoader(loaderType);
@@ -28,8 +28,9 @@ export class ModuleFederationManager implements IModuleFederationLoader {
 		}
 
 		try {
+			const publicPath = getRemoteModulePublicPath(url);
 			const scriptContent = await this.#loaderAdapter.fetchScriptContent(url);
-			const result = await this.#executorAdapter.execute(scriptContent);
+			const result = await this.#executorAdapter.execute(scriptContent, publicPath);
 
 			if (isExecutorFailed(result)) {
 				throw result.error;
@@ -37,18 +38,14 @@ export class ModuleFederationManager implements IModuleFederationLoader {
 
 			const container = result.module;
 
-			await this.initializeWebpackShareScope();
-			await this.initializeContainerWithSharedScope(container);
+			await this.#initializeWebpackShareScope();
+			await this.#initializeContainerWithSharedScope(container);
 
-			this.storeLoadedRemote(scopeName, container);
+			this.#storeLoadedRemote(scopeName, container);
 		} catch (error) {
 			assertIsError(error);
 			throw new Error(`Failed to load and evaluate remote module "${scopeName}" from ${url}: ${error.message}`);
 		}
-	}
-
-	isScopeRegistered(scopeName: string) {
-		return this.#loadedRemotes.has(scopeName);
 	}
 
 	async importModule<T>(scopeName: string, moduleName: string) {
@@ -74,18 +71,22 @@ export class ModuleFederationManager implements IModuleFederationLoader {
 		}
 	}
 
-	private async initializeWebpackShareScope(shareScopeName = 'default') {
-		if (!this.#webpackShareScopeInitialized) {
-			if (!__webpack_share_scopes__[shareScopeName]) {
-				await __webpack_init_sharing__(shareScopeName);
-			} else {
-				console.info(`Runtime ${shareScopeName} already exists`);
-			}
-			this.#webpackShareScopeInitialized = true;
-		}
+	isScopeRegistered(scopeName: string) {
+		return this.#loadedRemotes.has(scopeName);
 	}
 
-	private async initializeContainerWithSharedScope(
+	async #initializeWebpackShareScope(sharedScopeName = 'default') {
+		if (!!__webpack_share_scopes__[sharedScopeName]) {
+			return;
+		}
+
+		await withErrorHandling(
+			__webpack_init_sharing__(sharedScopeName),
+			`Failed to initialize share scope "${sharedScopeName}"`,
+		);
+	}
+
+	async #initializeContainerWithSharedScope(
 		container: WebpackModuleFederationRuntime,
 		sharedScopeName: string = 'default',
 	) {
@@ -95,7 +96,7 @@ export class ModuleFederationManager implements IModuleFederationLoader {
 		);
 	}
 
-	private storeLoadedRemote(scopeName: string, container: WebpackModuleFederationRuntime) {
+	#storeLoadedRemote(scopeName: string, container: WebpackModuleFederationRuntime) {
 		this.#loadedRemotes.set(scopeName, {
 			container,
 			loadedAt: Date.now(),

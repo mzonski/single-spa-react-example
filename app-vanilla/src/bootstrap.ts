@@ -1,6 +1,7 @@
-import { createElement } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, { createElement } from 'react';
+import ReactDOMClient, { createRoot } from 'react-dom/client';
 import { LifeCycles, registerApplication, start } from 'single-spa';
+import singleSpaReact from 'single-spa-react';
 import { ModuleFederationManager } from './moduleFederation/ModuleFederationManager';
 
 const createSimpleReactRoot = () => {
@@ -8,32 +9,50 @@ const createSimpleReactRoot = () => {
 	root.render(createElement('div', { children: 'Welcome in the react world' }));
 };
 
-const dumbModuleLoader = async () => {
-	// @ts-ignore
-	// const module = await import('http://localhost:3322/legacy/remoteEntry.js');
-	// console.log(Object.keys(module));
-	// console.log('(dumbModuleLoader) module', module);
+const createSimpleSingleSpaApp = () => {
+	const Element = createElement('div', { children: 'Hello from Single SPA' });
+
+	const lifecycles = singleSpaReact({
+		React,
+		ReactDOMClient,
+		rootComponent: () => (() => Element)(),
+	});
+
+	registerApplication({
+		name: '@zonia-test/rootApp',
+		app: lifecycles,
+		activeWhen: ['/'],
+	});
 };
 
-const initializeApp = async () => {
-	createSimpleReactRoot();
-
-	const moduleFederationLoader = new ModuleFederationManager('fetch', 'blob');
-	await moduleFederationLoader.loadRemoteModule('http://localhost:3322/legacy/remoteEntry.js', 'legacyModule');
-	const spaApp = await moduleFederationLoader.importModule<LifeCycles>('legacyModule', './spaApp');
+const createSimpleModuleManagement = async () => {
+	const moduleManager = new ModuleFederationManager('fetch', 'blob');
+	await moduleManager.loadRemoteModule('http://localhost:3322/legacy/remoteEntry.js', 'legacyModule');
+	// await moduleManager.loadRemoteModule('http://localhost:8081/remoteEntry.js', 'legacyModule');
+	const spaApp = await moduleManager.importModule<LifeCycles>('legacyModule', './spaApp');
 
 	registerApplication({
 		name: '@zonia-test/legacyApp',
 		app: spaApp,
 		activeWhen: ['/'],
 	});
+};
+
+let isInitialized = false;
+
+const initializeApp = async () => {
+	isInitialized = true;
+	createSimpleReactRoot();
+	createSimpleSingleSpaApp();
+	await createSimpleModuleManagement();
 
 	start();
 };
 
 document.getElementById('load-btn').addEventListener('click', async () => {
-	// await initializeApp();
-	// await dumbAppLoader();
+	if (isInitialized) return;
+
+	await initializeApp();
 });
 
-initializeApp();
+initializeApp().then(() => console.log('Initialized'));

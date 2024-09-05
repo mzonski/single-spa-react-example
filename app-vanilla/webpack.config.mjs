@@ -81,9 +81,6 @@ const config = {
 			remoteType: 'module',
 			runtime: 'react-runtime',
 			library: { type: 'module' },
-			// remotes: {
-			// 	legacyModule: 'legacyModule@http://localhost:3322/legacy/remoteEntry.js',
-			// },
 			shared: {
 				'react': {
 					singleton: true,
@@ -92,6 +89,12 @@ const config = {
 					strictVersion: true,
 				},
 				'react-dom': {
+					singleton: true,
+					requiredVersion: '18.3.1',
+					eager: true,
+					strictVersion: true,
+				},
+				'react-dom/client': {
 					singleton: true,
 					requiredVersion: '18.3.1',
 					eager: true,
@@ -148,7 +151,7 @@ const config = {
 	},
 	cache: {
 		type: 'filesystem',
-		cacheLocation: resolve(__dirname, '../', 'webpack_cache', 'app_host'),
+		cacheLocation: resolve(__dirname, '../../', 'node_modules', '.cache', 'webpack', 'app_host'),
 		compression: false,
 	},
 };

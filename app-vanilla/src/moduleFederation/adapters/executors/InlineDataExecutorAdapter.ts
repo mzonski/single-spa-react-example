@@ -1,29 +1,30 @@
+import { assertIsError } from '../../../utils';
 import { ExecutorResult, ModuleFederationExecutorAdapter, ScriptContent } from '../types';
 import { WebpackModuleFederationRuntime } from '../../webpackTypes';
-import { assertIsError } from '../../../utils';
+import { createInlineData } from '../../utils/createInlineData';
 import {
 	combineScriptContent,
 	withDefinedWebpackSourceUrl,
-	withIife,
-	withImportMetaUrlReplacement,
-	withReturnWebpackExports,
+	withModuleDefaultExport,
+	withModulePublicPathDefined,
 } from './utils';
 
-export class FunctionExecutorAdapter implements ModuleFederationExecutorAdapter {
+export class InlineDataExecutorAdapter implements ModuleFederationExecutorAdapter {
 	async execute<TFederatedModule extends WebpackModuleFederationRuntime>(
 		remoteScriptContent: ScriptContent,
 		publicPath?: string,
 	): Promise<ExecutorResult<TFederatedModule>> {
 		try {
 			const scriptContent = combineScriptContent(
-				withIife(withImportMetaUrlReplacement(remoteScriptContent, publicPath), withReturnWebpackExports()),
+				withModulePublicPathDefined(publicPath),
+				remoteScriptContent,
+				withModuleDefaultExport(),
 				withDefinedWebpackSourceUrl(publicPath),
 			);
+			const inlineData = createInlineData('application/ecmascript', scriptContent);
+			const module = await import(/* webpackIgnore: true */ inlineData);
 
-			const factory = new Function(scriptContent);
-			const result = factory() as TFederatedModule;
-
-			return { success: true, module: result };
+			return { success: true, module: module.default as TFederatedModule };
 		} catch (error) {
 			assertIsError(error);
 			return { success: false, error };

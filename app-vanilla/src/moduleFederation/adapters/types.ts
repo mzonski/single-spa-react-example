@@ -5,6 +5,7 @@ import { Brand } from '../../utilityTypes';
 import { WebpackModuleFederationRuntime } from '../webpackTypes';
 import { FunctionExecutorAdapter } from './executors/FunctionExecutorAdapter';
 import { BlobImportExecutorAdapter } from './executors/BlobImportExecutorAdapter';
+import { InlineDataExecutorAdapter } from './executors/InlineDataExecutorAdapter';
 
 export type ScriptContent = Brand<string, 'ScriptContent'>;
 
@@ -23,12 +24,13 @@ export function isExecutorFailed(result: ExecutorResult<unknown>): result is Exe
 	return result.success === false;
 }
 
-export type ExecutorAdapterType = 'blob' | 'eval' | 'function';
+export type ExecutorAdapterType = 'blob' | 'eval' | 'function' | 'inlineData';
 
 export type ExecutorFor<T extends ExecutorAdapterType> =
 	T extends 'blob' ? BlobImportExecutorAdapter
 	: T extends 'eval' ? EvalExecutorAdapter
 	: T extends 'function' ? FunctionExecutorAdapter
+	: T extends 'inlineData' ? InlineDataExecutorAdapter
 	: never;
 
 export type LoaderAdapterType = 'fetch' | 'axios';
@@ -44,7 +46,8 @@ export interface ModuleFederationFetchScriptAdapter {
 
 export interface ModuleFederationExecutorAdapter {
 	execute<TFederatedModule extends WebpackModuleFederationRuntime>(
-		scriptContent: ScriptContent,
+		remoteScriptContent: ScriptContent,
+		publicPath?: string,
 	): Promise<ExecutorResult<TFederatedModule>>;
 }
 
