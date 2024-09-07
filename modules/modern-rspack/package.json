@@ -1,0 +1,27 @@
+{
+	"name": "@zonia-test/modern10",
+	"private": true,
+	"version": "1.0.0",
+	"scripts": {
+		"dev": "cross-env NODE_ENV=development rspack serve",
+		"build:10": "cross-env NODE_ENV=production MF_VER=10 rspack build",
+		"build:15": "cross-env NODE_ENV=production MF_VER=15 rspack build",
+		"build:20": "cross-env NODE_ENV=production MF_VER=20 rspack build"
+	},
+	"peerDependencies": {
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"single-spa-react": "^6.0.1"
+	},
+	"devDependencies": {
+		"@rspack/cli": "1.0.0",
+		"@rspack/core": "1.0.0",
+		"@rspack/plugin-react-refresh": "1.0.0",
+		"@types/react": "^18.2.48",
+		"@types/react-dom": "^18.2.18",
+		"cross-env": "^7.0.3",
+		"react-refresh": "^0.14.0",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.3.3"
+	}
+}

@@ -57,7 +57,6 @@ export class Logger {
 		if (options.enabled) {
 			debug.enable(`${namespace}:*`);
 		}
-		debug.enable(`*`);
 	}
 
 	// static #createLoggerInstances(namespace: string) {
