@@ -1,10 +1,12 @@
-import { assertIsError } from '../utils';
 import { ExecutorAdapterType, isExecutorFailed, LoadedModuleRemoteInfo, LoaderAdapterType } from './adapters/types';
 import { createExecutor, createLoader } from './adapters/factories';
 import { WebpackModuleFederationRuntime } from './webpackTypes';
 import { withErrorHandling } from './utils/errorHandlingMixin';
 import { getRemoteModulePublicPath } from './utils/getRemoteModulePublicPath';
+import { createEvent, EventEmitterMixin } from './mixins/eventEmitter';
+import { assertIsError, extendError } from '../utils';
 import { Logger } from '../core/Logger';
+import { ModuleFactoryUndefinedError, ModuleInfoUndefinedError, ScopeNotRegisteredError } from './errors';
 
 interface IModuleFederationLoader {
 	loadRemoteModule(url: string, scopeName: string): Promise<void>;
@@ -12,18 +14,21 @@ interface IModuleFederationLoader {
 	importModule<T>(scopeName: string, moduleName: string): Promise<T>;
 }
 
-export class ModuleFederationManager implements IModuleFederationLoader {
+export class ModuleFederationManager extends EventEmitterMixin(class {}) implements IModuleFederationLoader {
 	readonly #loaderAdapter: ReturnType<typeof createLoader<LoaderAdapterType>>;
 	readonly #executorAdapter: ReturnType<typeof createExecutor<ExecutorAdapterType>>;
 	readonly #loadedRemotes: Map<string, LoadedModuleRemoteInfo> = new Map();
 	readonly #logger = new Logger('app:ModuleFederationManager');
 
 	constructor(loaderType: LoaderAdapterType, executorType: ExecutorAdapterType) {
+		super();
 		this.#loaderAdapter = createLoader(loaderType);
 		this.#executorAdapter = createExecutor(executorType);
 	}
 
 	async loadRemoteModule(url: string, scopeName: string, forceReload: boolean = false) {
+		this.emit(createEvent('load', 'start', { scopeName, url }));
+
 		if (this.#loadedRemotes.has(scopeName) && !forceReload) {
 			this.#logger.warn(`Scope "${scopeName}" is already loaded`);
 			return;
@@ -44,32 +49,44 @@ export class ModuleFederationManager implements IModuleFederationLoader {
 			await this.#initializeContainerWithSharedScope(container);
 
 			this.#storeLoadedRemote(scopeName, container);
+			this.emit(createEvent('load', 'success', { scopeName, url }));
 		} catch (error) {
+			this.emit(createEvent('load', 'error', { scopeName, error }));
 			assertIsError(error);
-			throw new Error(`Failed to load and evaluate remote module "${scopeName}" from ${url}: ${error.message}`);
+			throw extendError(error, `Failed to load and evaluate remote module "${scopeName}" from ${url}`);
 		}
 	}
 
 	async importModule<T>(scopeName: string, moduleName: string) {
+		this.emit(createEvent('import', 'start', { scopeName, moduleName }));
+
 		if (!this.isScopeRegistered(scopeName)) {
-			throw new Error(`Scope "${scopeName}" is not registered.`);
+			const error = new ScopeNotRegisteredError(scopeName);
+			this.emit(createEvent('import', 'error', { scopeName, error }));
+			throw error;
 		}
 
 		const moduleInfo = this.#loadedRemotes.get(scopeName);
 		if (!moduleInfo) {
-			throw new Error(`Module info for scope "${scopeName}" is undefined.`);
+			const error = new ModuleInfoUndefinedError(scopeName);
+			this.emit(createEvent('import', 'error', { scopeName, error }));
+			throw error;
 		}
 
 		try {
 			const factory = await moduleInfo.container.get<T>(moduleName);
 
 			if (!factory) {
-				throw new Error(`Factory for module "${moduleName}" in scope "${scopeName}" is undefined.`);
+				throw new ModuleFactoryUndefinedError(scopeName, moduleName);
 			}
-			return factory();
+
+			const module = factory();
+			this.emit(createEvent('import', 'success', { scopeName, moduleName }));
+			return module;
 		} catch (error) {
+			this.emit(createEvent('import', 'error', { scopeName, error }));
 			assertIsError(error);
-			throw new Error(`Failed to import module "${moduleName}" from scope "${scopeName}": ${error.message}`);
+			throw extendError(error, `Failed to import module "${moduleName}" from scope "${scopeName}`);
 		}
 	}
 

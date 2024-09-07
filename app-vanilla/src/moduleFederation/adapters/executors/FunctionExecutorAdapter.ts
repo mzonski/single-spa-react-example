@@ -20,8 +20,8 @@ export class FunctionExecutorAdapter implements ModuleFederationExecutorAdapter 
 				withDefinedWebpackSourceUrl(publicPath),
 			);
 
-			const factory = new Function(scriptContent);
-			const result = factory() as TFederatedModule;
+			const scriptContentFunction = new Function(scriptContent);
+			const result = scriptContentFunction() as TFederatedModule;
 
 			return { success: true, module: result };
 		} catch (error) {
