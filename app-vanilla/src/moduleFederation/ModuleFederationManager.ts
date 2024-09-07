@@ -4,6 +4,7 @@ import { createExecutor, createLoader } from './adapters/factories';
 import { WebpackModuleFederationRuntime } from './webpackTypes';
 import { withErrorHandling } from './utils/errorHandlingMixin';
 import { getRemoteModulePublicPath } from './utils/getRemoteModulePublicPath';
+import { Logger } from '../core/Logger';
 
 interface IModuleFederationLoader {
 	loadRemoteModule(url: string, scopeName: string): Promise<void>;
@@ -15,6 +16,7 @@ export class ModuleFederationManager implements IModuleFederationLoader {
 	readonly #loaderAdapter: ReturnType<typeof createLoader<LoaderAdapterType>>;
 	readonly #executorAdapter: ReturnType<typeof createExecutor<ExecutorAdapterType>>;
 	readonly #loadedRemotes: Map<string, LoadedModuleRemoteInfo> = new Map();
+	readonly #logger = new Logger('app:ModuleFederationManager');
 
 	constructor(loaderType: LoaderAdapterType, executorType: ExecutorAdapterType) {
 		this.#loaderAdapter = createLoader(loaderType);
@@ -23,7 +25,7 @@ export class ModuleFederationManager implements IModuleFederationLoader {
 
 	async loadRemoteModule(url: string, scopeName: string, forceReload: boolean = false) {
 		if (this.#loadedRemotes.has(scopeName) && !forceReload) {
-			console.warn(`Scope "${scopeName}" is already loaded. Use forceReload=true to reload.`);
+			this.#logger.warn(`Scope "${scopeName}" is already loaded`);
 			return;
 		}
 

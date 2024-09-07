@@ -3,9 +3,12 @@ import ReactDOMClient, { createRoot } from 'react-dom/client';
 import { LifeCycles, registerApplication, start } from 'single-spa';
 import singleSpaReact from 'single-spa-react';
 import { ModuleFederationManager } from './moduleFederation/ModuleFederationManager';
+import ansiFormatter from './core/ansi/ANSIStringFormatter';
+
+const moduleManager = new ModuleFederationManager('fetch', 'eval');
 
 const createSimpleReactRoot = () => {
-	const root = createRoot(document.getElementById('react-root'), {});
+	const root = createRoot(document.getElementById('react-root')!, {});
 	root.render(createElement('div', { children: 'Welcome in the react world' }));
 };
 
@@ -26,7 +29,6 @@ const createSimpleSingleSpaApp = () => {
 };
 
 const createSimpleModuleManagement = async () => {
-	const moduleManager = new ModuleFederationManager('fetch', 'blob');
 	await moduleManager.loadRemoteModule('http://localhost:3322/legacy/remoteEntry.js', 'legacyModule');
 	// await moduleManager.loadRemoteModule('http://localhost:8081/remoteEntry.js', 'legacyModule');
 	const spaApp = await moduleManager.importModule<LifeCycles>('legacyModule', './spaApp');
@@ -49,10 +51,10 @@ const initializeApp = async () => {
 	start();
 };
 
-document.getElementById('load-btn').addEventListener('click', async () => {
+document.getElementById('load-btn')!.addEventListener('click', async () => {
 	if (isInitialized) return;
 
 	await initializeApp();
 });
 
-initializeApp().then(() => console.log('Initialized'));
+initializeApp().then(() => console.log(ansiFormatter.rainbow('Initialized')));

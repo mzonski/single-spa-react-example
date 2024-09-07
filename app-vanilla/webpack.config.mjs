@@ -57,6 +57,7 @@ const config = {
 		module: true,
 		filename: '[name].bundle.js',
 		chunkFilename: '[name].chunk.js',
+		chunkLoadingGlobal: 'app_host',
 	},
 	module: {
 		rules: [createScriptLoaderRule('ts')],
